@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   BookOpen,
@@ -6,52 +8,99 @@ import {
   Award,
   User,
   LogOut,
+  Users,
+  Settings,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
-export default function Sidebar() {
+const Sidebar = () => {
   const navigate = useNavigate();
 
+  // 👇 Ở đây tạm lấy role từ localStorage (hoặc API)
+  const [role, setRole] = useState("student");
+
+  useEffect(() => {
+    // Ví dụ: role được lưu sau khi login
+    const savedRole = localStorage.getItem("userRole");
+    if (savedRole) setRole(savedRole);
+  }, []);
+
+  // 🧱 Menu cho từng role
+  const baseMenu = [
+    { name: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/dashboard" },
+    { name: "Notifications", icon: <Bell size={18} />, path: "/notifications" },
+    { name: "Profile", icon: <User size={18} />, path: "/profile" },
+  ];
+
+  const roleMenus = {
+    admin: [
+      { name: "User Management", icon: <Users size={18} />, path: "/user-management" },
+      { name: "System Settings", icon: <Settings size={18} />, path: "/settings" },
+    ],
+    instructor: [
+      { name: "My Classes", icon: <BookOpen size={18} />, path: "/classes" },
+      { name: "My Projects", icon: <Folder size={18} />, path: "/projects" },
+      { name: "Hall of Fame", icon: <Award size={18} />, path: "/hall-of-fame" },
+    ],
+    student: [
+      { name: "My Projects", icon: <Folder size={18} />, path: "/projects" },
+      { name: "Hall of Fame", icon: <Award size={18} />, path: "/hall-of-fame" },
+    ],
+  };
+
+  // ✅ Gộp menu chung + menu riêng
+  const finalMenu = [
+    ...baseMenu.slice(0, 1), // Dashboard luôn có
+    ...(roleMenus[role] || []),
+    ...baseMenu.slice(1), // Notifications + Profile luôn có
+  ];
+
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userRole");
     navigate("/");
   };
 
   return (
-    <div className="w-64 bg-white h-screen border-r flex flex-col justify-between">
-      <div>
-        <div className="p-6 font-bold text-xl">IoT Projects</div>
-        <div className="px-6 text-sm text-gray-500 mb-6">Alex Chen</div>
-
-        <nav className="space-y-1">
-          <SidebarItem icon={<LayoutDashboard />} text="Dashboard" />
-          <SidebarItem icon={<BookOpen />} text="My Classes" />
-          <SidebarItem icon={<Folder />} text="My Projects" active />
-          <SidebarItem icon={<Bell />} text="Notifications" />
-          <SidebarItem icon={<Award />} text="Hall of Fame" />
-          <SidebarItem icon={<User />} text="Profile" />
-        </nav>
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col min-h-screen">
+      {/* Header */}
+      <div className="p-5 border-b">
+        <h1 className="text-lg font-semibold text-gray-800">IoT Projects</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {role.charAt(0).toUpperCase() + role.slice(1)}
+        </p>
       </div>
 
-      <button
-        onClick={handleLogout}
-        className="flex items-center px-6 py-4 text-gray-600 hover:text-red-600 transition"
-      >
-        <LogOut className="w-5 h-5 mr-2" /> Logout
-      </button>
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {finalMenu.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-150 ${
+                isActive
+                  ? "bg-blue-50 text-blue-600 font-medium border-l-4 border-blue-600"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 pl-[4px]"
+              }`
+            }
+          >
+            {item.icon}
+            {item.name}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div className="border-t px-3 py-4">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 text-gray-600 hover:text-red-600 text-sm w-full"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
     </div>
   );
-}
+};
 
-function SidebarItem({ icon, text, active }) {
-  return (
-    <button
-      className={`flex items-center w-full px-6 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition ${
-        active ? "bg-blue-50 text-blue-600 font-medium" : ""
-      }`}
-    >
-      <div className="w-5 h-5 mr-3">{icon}</div>
-      {text}
-    </button>
-  );
-}
+export default Sidebar;

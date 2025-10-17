@@ -5,10 +5,26 @@ import { useNavigate } from "react-router-dom";
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
     localStorage.setItem("isLoggedIn", "true");
+
+    let role = "";
+    if (email === "admin@university.edu") role = "admin";
+    else if (email === "instructor@university.edu") role = "instructor";
+    else {
+      role = "student";
+    }
+
+    // ✅ Lưu role và thông tin user vào localStorage
+    localStorage.setItem("userRole", role);
+    localStorage.setItem("userEmail", email);
+
+
     navigate("/dashboard");
   };
 
@@ -35,6 +51,8 @@ export default function Login() {
               <Mail className="w-4 h-4 text-gray-400 mr-2" />
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 className="w-full py-2 outline-none text-gray-700"
                 required
@@ -48,6 +66,8 @@ export default function Login() {
               <Lock className="w-4 h-4 text-gray-400 mr-2" />
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 className="w-full py-2 outline-none text-gray-700"
                 required
