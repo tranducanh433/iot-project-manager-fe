@@ -26,7 +26,8 @@ const Sidebar = () => {
 
   // 🧱 Menu cho từng role
   const baseMenu = [
-    { name: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/dashboard" },
+    // { name: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/dashboard" },
+    { name: "Hall of Fame", icon: <Award size={18} />, path: "/hall-of-fame" },
     { name: "Notifications", icon: <Bell size={18} />, path: "/notifications" },
     { name: "Profile", icon: <User size={18} />, path: "/profile" },
   ];
@@ -38,20 +39,18 @@ const Sidebar = () => {
     ],
     instructor: [
       { name: "My Classes", icon: <BookOpen size={18} />, path: "/classes" },
-      { name: "My Projects", icon: <Folder size={18} />, path: "/projects" },
-      { name: "Hall of Fame", icon: <Award size={18} />, path: "/hall-of-fame" },
+      { name: "My Projects", icon: <Folder size={18} />, path: "/dashboard" },
     ],
     student: [
-      { name: "My Projects", icon: <Folder size={18} />, path: "/projects" },
-      { name: "Hall of Fame", icon: <Award size={18} />, path: "/hall-of-fame" },
+      { name: "My Projects", icon: <Folder size={18} />, path: "/dashboard" },
     ],
   };
 
   // ✅ Gộp menu chung + menu riêng
   const finalMenu = [
-    ...baseMenu.slice(0, 1), // Dashboard luôn có
+    //...baseMenu.slice(0, 1),
     ...(roleMenus[role] || []),
-    ...baseMenu.slice(1), // Notifications + Profile luôn có
+    ...baseMenu.slice(0, 4),
   ];
 
   const handleLogout = () => {

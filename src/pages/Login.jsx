@@ -20,12 +20,13 @@ export default function Login() {
       role = "student";
     }
 
-    // ✅ Lưu role và thông tin user vào localStorage
     localStorage.setItem("userRole", role);
     localStorage.setItem("userEmail", email);
 
-
-    navigate("/dashboard");
+    if(role === "student")
+      navigate("/dashboard");
+    else if(role === "instructor")
+      navigate("/instructor/classes");
   };
 
   return (

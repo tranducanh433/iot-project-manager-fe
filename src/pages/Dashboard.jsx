@@ -10,11 +10,32 @@ export default function Dashboard() {
     if (!isLoggedIn) navigate("/");
   }, [navigate]);
 
+  // Danh sách project mẫu
+  const projects = [
+    {
+      id: 1,
+      title: "Smart Home IoT System",
+      course: "IoT Fundamentals",
+      date: "1/15/2025",
+      status: "Evaluated",
+      statusColor: "bg-blue-100 text-blue-700",
+    },
+    {
+      id: 2,
+      title: "Weather Monitoring Station",
+      course: "Sensor Networks",
+      date: "1/18/2025",
+      status: "Submitted",
+      statusColor: "bg-green-100 text-green-700",
+    },
+  ];
+
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
           <div>
             <h1 className="text-2xl font-semibold">My Projects</h1>
@@ -31,22 +52,17 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Content */}
         <div className="p-8 overflow-auto">
           <div className="space-y-4 max-w-4xl">
-            <ProjectCard
-              title="Smart Home IoT System"
-              course="IoT Fundamentals"
-              date="1/15/2025"
-              status="Evaluated"
-              statusColor="bg-blue-100 text-blue-700"
-            />
-            <ProjectCard
-              title="Weather Monitoring Station"
-              course="Sensor Networks"
-              date="1/18/2025"
-              status="Submitted"
-              statusColor="bg-green-100 text-green-700"
-            />
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                {...project}
+                onView={() => navigate(`/project/${project.id}`)}
+                onEdit={() => navigate(`/project/${project.id}/edit`)}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -54,9 +70,17 @@ export default function Dashboard() {
   );
 }
 
-function ProjectCard({ title, course, date, status, statusColor }) {
+function ProjectCard({
+  title,
+  course,
+  date,
+  status,
+  statusColor,
+  onView,
+  onEdit,
+}) {
   return (
-    <div className="bg-white border rounded-lg p-4 flex justify-between items-center">
+    <div className="bg-white border rounded-lg p-4 flex justify-between items-center hover:shadow-md transition">
       <div>
         <h3 className="font-medium">{title}</h3>
         <p className="text-gray-500 text-sm">{course}</p>
@@ -69,12 +93,18 @@ function ProjectCard({ title, course, date, status, statusColor }) {
         >
           {status}
         </span>
-        <a href="#" className="text-blue-600 text-sm hover:underline">
+        <button
+          onClick={onView}
+          className="text-blue-600 text-sm hover:underline"
+        >
           View
-        </a>
-        <a href="#" className="text-blue-600 text-sm hover:underline">
+        </button>
+        <button
+          onClick={onEdit}
+          className="text-blue-600 text-sm hover:underline"
+        >
           Edit
-        </a>
+        </button>
       </div>
     </div>
   );
