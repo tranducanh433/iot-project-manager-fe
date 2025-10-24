@@ -1,144 +1,109 @@
-import React, { useState } from "react";
-import { Check, X, Circle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar"; // ✅ thêm Sidebar
+import React from "react";
+import Sidebar from "../components/Sidebar";
+import { users, teams } from "../mockData";
+import { useNotifications } from "../NotificationContext";
 
 const Notifications = () => {
-  const navigate = useNavigate();
+  const { notifications, updateNotification, saveTeams } = useNotifications();
+  const currentUser = JSON.parse(localStorage.getItem("user"));
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Team Invitation",
-      content: "huybdse173401@fpt.edu.vn has invited you to a team",
-      date: "1/15/2025, 5:30:00 PM",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Project Evaluated",
-      content: "Your project 'Smart Home IoT System' has been evaluated",
-      date: "1/10/2025, 2:10:00 PM",
-      read: true,
-    },
-  ]);
+  const filteredNotis = notifications.filter((n) =>
+    n.toUser.includes(currentUser.id)
+  );
 
-  const [filter, setFilter] = useState("all");
+  const getTeamById = (id) => teams.find((t) => t.id === id);
+  const getUserById = (id) => users.find((u) => u.id === id);
 
-  const handleMarkAllRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
-  };
+  const handleAction = (noti, isAccept) => {
+    updateNotification(noti.id, { isAccept, isRead: true });
 
-  const handleAction = (id, action) => {
-    if (action === "accept") alert(`Accepted invitation #${id}`);
-    else if (action === "reject") alert(`Rejected invitation #${id}`);
-    else if (action === "read") {
-      setNotifications(
-        notifications.map((n) =>
-          n.id === id ? { ...n, read: true } : n
-        )
-      );
+    if (isAccept) {
+      const team = getTeamById(noti.teamId);
+      if (!team.members.includes(noti.fromUser)) {
+        team.members.push(noti.fromUser);
+        saveTeams(teams);
+      }
     }
   };
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (filter === "unread") return !n.read;
-    if (filter === "read") return n.read;
-    return true;
-  });
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* ✅ SIDEBAR */}
+    <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* TOP NAV */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="text-blue-600 text-sm hover:underline"
-          >
-            ← Back to Dashboard
-          </button>
-          <button
-            onClick={handleMarkAllRead}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
-          >
-            Mark All Read
-          </button>
-        </div>
+      <div className="flex-1 p-6">
+        <h2 className="text-xl font-bold mb-4">Notifications</h2>
 
-        {/* CONTENT */}
-        <div className="p-6 overflow-y-auto flex-1">
-          <h1 className="text-xl font-semibold">Notifications</h1>
-          <p className="text-sm text-gray-500 mb-4">
-            {notifications.filter((n) => !n.read).length} unread notifications
-          </p>
-
-          {/* FILTER TABS */}
-          <div className="flex gap-6 mb-6 border-b border-gray-200">
-            {["all", "unread", "read"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`pb-2 text-sm capitalize ${
-                  filter === tab
-                    ? "text-blue-600 border-b-2 border-blue-600 font-medium"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab === "all"
-                  ? `All (${notifications.length})`
-                  : tab === "unread"
-                  ? `Unread (${notifications.filter((n) => !n.read).length})`
-                  : `Read (${notifications.filter((n) => n.read).length})`}
-              </button>
-            ))}
-          </div>
-
-          {/* LIST */}
+        {filteredNotis.length === 0 ? (
+          <p className="text-gray-500">No notifications found.</p>
+        ) : (
           <div className="space-y-3">
-            {filteredNotifications.map((n) => (
-              <div
-                key={n.id}
-                className={`p-4 rounded-md border ${
-                  n.read ? "bg-white" : "bg-blue-50"
-                } flex justify-between items-center`}
-              >
-                <div>
-                  <h3 className="font-medium text-gray-800 flex items-center gap-2">
-                    <Check className="text-green-600 w-4 h-4" />
-                    {n.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">{n.content}</p>
-                  <p className="text-xs text-gray-400 mt-1">{n.date}</p>
-                  <button className="text-blue-600 text-sm mt-1 hover:underline">
-                    View Details →
-                  </button>
-                </div>
+            {filteredNotis.map((noti) => {
+              const sender = getUserById(noti.fromUser);
+              const team = getTeamById(noti.teamId);
 
-                <div className="flex gap-3">
-                  <Check
-                    onClick={() => handleAction(n.id, "accept")}
-                    className="w-4 h-4 text-blue-600 cursor-pointer hover:scale-110"
-                  />
-                  <X
-                    onClick={() => handleAction(n.id, "reject")}
-                    className="w-4 h-4 text-red-600 cursor-pointer hover:scale-110"
-                  />
-                  <Circle
-                    onClick={() => handleAction(n.id, "read")}
-                    className={`w-4 h-4 cursor-pointer ${
-                      n.read ? "text-gray-300" : "text-blue-600"
-                    } hover:scale-110`}
-                  />
+              return (
+                <div
+                  key={noti.id}
+                  className="bg-white p-4 rounded-lg shadow border-l-4
+                  transition
+                  hover:shadow-md
+                  border-blue-600"
+                >
+                  <div className="flex justify-between">
+                    <p className="font-medium">
+                      {noti.title}
+                      <span className="text-gray-500 text-xs ml-2">
+                        Team: {team?.teamName}
+                      </span>
+                    </p>
+
+                    <p
+                      className={`text-xs font-semibold ${
+                        noti.isAccept === true
+                          ? "text-green-600"
+                          : noti.isAccept === false
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
+                      {noti.isAccept === null
+                        ? "Pending"
+                        : noti.isAccept
+                        ? "Accepted"
+                        : "Rejected"}
+                    </p>
+                  </div>
+
+                  <p className="text-sm text-gray-700 mt-1">
+                    {noti.content}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    From: {sender?.name} ({sender?.email})
+                  </p>
+
+                  {/* Action Buttons */}
+                  {noti.isAccept === null && (
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        className="px-4 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
+                        onClick={() => handleAction(noti, true)}
+                      >
+                        Accept ✅
+                      </button>
+
+                      <button
+                        className="px-4 py-1 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition"
+                        onClick={() => handleAction(noti, false)}
+                      >
+                        Reject ❌
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

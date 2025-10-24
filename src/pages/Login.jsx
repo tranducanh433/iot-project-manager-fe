@@ -1,32 +1,70 @@
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { users, teams, notifications, projects, assets, classes, scores } from "../mockData";
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if(!localStorage.getItem("userLst")){
+    localStorage.setItem("userLst", JSON.stringify(users));
+  }
+  if(!localStorage.getItem("teams")){
+    localStorage.setItem("teams", JSON.stringify(teams));
+  }
+  if(!localStorage.getItem("notifications")){
+    localStorage.setItem("notifications", JSON.stringify(notifications));
+  }
+  if(!localStorage.getItem("projects")){
+    localStorage.setItem("projects", JSON.stringify(projects));
+  }
+  if(!localStorage.getItem("assets")){
+    localStorage.setItem("assets", JSON.stringify(assets));
+  }
+  if(!localStorage.getItem("classes")){
+    localStorage.setItem("classes", JSON.stringify(classes));
+  }
+  if(!localStorage.getItem("scores")){
+    localStorage.setItem("scores", JSON.stringify(scores));
+  }
 
   const handleLogin = (e) => {
     e.preventDefault();
-    localStorage.setItem("isLoggedIn", "true");
+    setLoading(true);
+    setError("");
 
-    let role = "";
-    if (email === "admin@university.edu") role = "admin";
-    else if (email === "instructor@university.edu") role = "instructor";
-    else {
-      role = "student";
-    }
+    setTimeout(() => {
+      const foundUser = users.find(
+        (u) => u.email === email && u.pass === password
+      );
 
-    localStorage.setItem("userRole", role);
-    localStorage.setItem("userEmail", email);
+      if (!foundUser) {
+        setError("Invalid email or password");
+        setLoading(false);
+        return;
+      }
 
-    if(role === "student")
-      navigate("/dashboard");
-    else if(role === "instructor")
-      navigate("/instructor/classes");
+      localStorage.setItem("user", JSON.stringify(foundUser));
+      localStorage.setItem("isLoggedIn", "true");
+
+      setLoading(false);
+
+      if (foundUser.role === 0)
+      {
+        if(teams.some(team => team.members.includes(foundUser.id)))
+          navigate("/dashboard");
+        else
+          navigate("/teams");
+      } 
+      else if (foundUser.role === 1) navigate("/instructor/classes");
+      else navigate("/admin");
+    }, 1000);
   };
 
   return (
@@ -38,9 +76,7 @@ export default function Login() {
           </div>
         </div>
 
-        <h2 className="text-center text-xl font-semibold mb-1">
-          Welcome Back
-        </h2>
+        <h2 className="text-center text-xl font-semibold mb-1">Welcome Back</h2>
         <p className="text-center text-gray-500 mb-6 text-sm">
           Sign in to your IoT Projects account
         </p>
@@ -68,44 +104,33 @@ export default function Login() {
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 className="w-full py-2 outline-none text-gray-700"
                 required
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
                 className="text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? "🙈" : "👁️"}
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-          </div>
 
-          <div className="text-right">
-            <a href="#" className="text-blue-600 text-sm hover:underline">
-              Forgot Password?
-            </a>
+            {error && (
+              <p className="text-red-500 text-sm mt-1">{error}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-medium transition"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-medium transition flex justify-center disabled:bg-blue-400"
+            disabled={loading}
           >
-            Sign In
+            {loading ? "Loading..." : "Sign In"}
           </button>
         </form>
-
-        <div className="my-5 border-t" />
-
-        <div className="text-sm text-gray-600">
-          <p className="font-semibold mb-1">Demo Accounts:</p>
-          <p>Admin: admin@university.edu</p>
-          <p>Instructor: instructor@university.edu</p>
-          <p>Student: student@university.edu</p>
-          <p>Password: any</p>
-        </div>
       </div>
     </div>
   );

@@ -6,12 +6,7 @@ import { User, Mail, Phone } from "lucide-react";
 export default function Profile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
-  const [user, setUser] = useState({
-    name: "Alex Chen",
-    email: "student@university.edu",
-    phone: "",
-    role: "Student",
-  });
+  const currentUser = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -35,7 +30,7 @@ export default function Profile() {
               onClick={() => navigate("/dashboard")}
               className="text-blue-600 text-sm hover:underline"
             >
-              ← Back to Dashboard
+              {/* ← Back to Dashboard */}
             </button>
           </div>
         </div>
@@ -43,12 +38,9 @@ export default function Profile() {
         {/* CONTENT */}
         <div className="p-8 overflow-auto">
           <div className="max-w-3xl mx-auto">
-            <h1 className="text-2xl font-semibold mb-2">Profile Settings</h1>
-            <p className="text-gray-500 text-sm mb-6">
-              Manage your account information and preferences
-            </p>
+            <h1 className="text-2xl font-semibold mb-2">Profile</h1>
 
-            {/* TABS */}
+            {/* TABS
             <div className="flex gap-8 border-b border-gray-200 mb-6">
               <button
                 onClick={() => setActiveTab("profile")}
@@ -70,7 +62,7 @@ export default function Profile() {
               >
                 Security
               </button>
-            </div>
+            </div> */}
 
             {activeTab === "profile" ? (
               <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -80,8 +72,8 @@ export default function Profile() {
                     <User className="w-8 h-8 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold">{user.name}</h2>
-                    <p className="text-gray-500 text-sm">{user.role}</p>
+                    <h2 className="text-lg font-semibold">{currentUser.name}</h2>
+                    <p className="text-gray-500 text-sm">{currentUser.role}</p>
                   </div>
                 </div>
 
@@ -91,17 +83,9 @@ export default function Profile() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </label>
-                    <div className="flex items-center border rounded-md px-3 py-2">
+                    <div className="flex items-center">
                       <User className="w-4 h-4 text-gray-400 mr-2" />
-                      <input
-                        type="text"
-                        value={user.name}
-                        onChange={(e) =>
-                          setUser({ ...user, name: e.target.value })
-                        }
-                        className="w-full outline-none text-sm"
-                        placeholder="Your full name"
-                      />
+                      <span className="text-sm text-gray-800">{currentUser.name}</span>
                     </div>
                   </div>
 
@@ -109,17 +93,9 @@ export default function Profile() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email Address
                     </label>
-                    <div className="flex items-center border rounded-md px-3 py-2">
+                    <div className="flex items-center">
                       <Mail className="w-4 h-4 text-gray-400 mr-2" />
-                      <input
-                        type="email"
-                        value={user.email}
-                        onChange={(e) =>
-                          setUser({ ...user, email: e.target.value })
-                        }
-                        className="w-full outline-none text-sm"
-                        placeholder="Your email address"
-                      />
+                      <span className="text-sm text-gray-800">{currentUser.email}</span>
                     </div>
                   </div>
 
@@ -127,26 +103,18 @@ export default function Profile() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Phone Number
                     </label>
-                    <div className="flex items-center border rounded-md px-3 py-2">
+                    <div className="flex items-center">
                       <Phone className="w-4 h-4 text-gray-400 mr-2" />
-                      <input
-                        type="text"
-                        value={user.phone}
-                        onChange={(e) =>
-                          setUser({ ...user, phone: e.target.value })
-                        }
-                        className="w-full outline-none text-sm"
-                        placeholder="Enter your phone number"
-                      />
+                      <span className="text-sm text-gray-800">{currentUser.phone}</span>
                     </div>
                   </div>
 
-                  <button
+                  {/* <button
                     onClick={handleSave}
                     className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md mt-2 flex items-center gap-2"
                   >
                     Save Changes
-                  </button>
+                  </button> */}
                 </div>
               </div>
             ) : (

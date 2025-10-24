@@ -1,124 +1,166 @@
-import { useState } from "react";
-import Sidebar from "../components/Sidebar.jsx";
-import { Trash2, Plus } from "lucide-react";
+import React, { useState } from "react";
+import Sidebar from "../components/Sidebar";
+import { users, teams as initialTeams } from "../mockData";
+import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../NotificationContext";
 
-export default function CreateTeam() {
-  const [members, setMembers] = useState([
-    {
-      email: "huybdse173401@fpt.edu.vn",
-      status: "ACCEPTED",
-      role: "LEADER",
-    },
-    {
-      email: "locntse161090@fpt.edu.vn",
-      status: "ACCEPTED",
-      role: "",
-    },
-    {
-      email: "anhtdse150629@fpt.edu.vn",
-      status: "WAITING",
-      role: "",
-    },
-  ]);
+const CreateTeam = () => {
+  const navigate = useNavigate();
+  const { addNotification, saveTeams } = useNotifications();
+  const currentUser = JSON.parse(localStorage.getItem("user"));
 
-  const [showPopup, setShowPopup] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
+  const [teams, setTeams] = useState(initialTeams);
+  const [teamName, setTeamName] = useState("");
+  const [maxMember, setMaxMember] = useState(4);
 
-  const handleAdd = () => {
-    if (!newEmail.trim()) return;
-    setMembers([
-      ...members,
-      { email: newEmail.trim(), status: "WAITING", role: "" },
-    ]);
-    setNewEmail("");
-    setShowPopup(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [invitedEmails, setInvitedEmails] = useState([]);
+
+  const handleAddEmail = () => {
+    if (!emailInput.trim()) return;
+    if (invitedEmails.includes(emailInput))
+      return alert("This member is already added!");
+
+    // Validate user existence
+    const user = users.find((u) => u.email === emailInput);
+    if (!user) return alert("Email does not exists in system!");
+
+    if (user.id === currentUser.id)
+      return alert("You can’t invite yourself!");
+
+    setInvitedEmails([...invitedEmails, emailInput]);
+    setEmailInput("");
   };
 
-  const handleDelete = (email) => {
-    setMembers(members.filter((m) => m.email !== email));
+  const handleRemoveEmail = (email) => {
+    setInvitedEmails(invitedEmails.filter((e) => e !== email));
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "ACCEPTED":
-        return "bg-green-100 text-green-700";
-      case "WAITING":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
+  const handleCreateTeam = () => {
+    if (!teamName.trim()) return alert("Team name cannot be empty!");
+    if (maxMember < 2) return alert("Max members must be at least 2!");
+    if (invitedEmails.length + 1 > maxMember)
+      return alert("Number of members exceeds Max Member!");
+
+    const invitedUsers = users.filter((u) =>
+      invitedEmails.includes(u.email)
+    );
+
+    const newTeam = {
+      id: teams.length + 1,
+      teamName,
+      leader: currentUser.id,
+      members: [currentUser.id], // only leader included
+      maxMember,
+      status: "open",
+      createDate: new Date().toLocaleString(),
+    };
+
+    const updatedTeams = [...teams, newTeam];
+    setTeams(updatedTeams);
+    saveTeams(updatedTeams);
+
+    // Send invitations
+    invitedUsers.forEach((user) => {
+      addNotification({
+        id: Date.now() + user.id,
+        toUser: [user.id],
+        fromUser: currentUser.id,
+        teamId: newTeam.id,
+        title: "Team Invitation",
+        content: `You've been invited to join team: ${teamName}`,
+        isRead: false,
+        isAccept: null,
+      });
+    });
+
+    alert("Team created! Invitations sent ✅");
+    navigate("/find-team");
   };
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
+    <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
 
-      <div className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-6 relative">
+      <div className="flex-1 p-6">
+        <h2 className="text-xl font-bold mb-4">Create New Team</h2>
+
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          {/* Team Name */}
           <div>
-            <h1 className="text-2xl font-semibold">Create Team</h1>
-            <p className="text-gray-500 text-sm">Create team for your project</p>
+            <label className="text-sm font-medium">Team Name</label>
+            <input
+              type="text"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              className="w-full border px-3 py-2 rounded-md mt-1"
+              placeholder="Enter team name..."
+            />
           </div>
 
-          <div className="relative">
-            <button
-              onClick={() => setShowPopup(!showPopup)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-1" /> New Member
-            </button>
-
-            {showPopup && (
-              <div className="absolute right-0 mt-2 bg-white shadow-lg border rounded-lg p-4 w-64">
-                <input
-                  type="email"
-                  placeholder="Enter email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 mb-2 text-sm"
-                />
-                <button
-                  onClick={handleAdd}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm"
-                >
-                  Add
-                </button>
-              </div>
-            )}
+          {/* Max Member */}
+          <div>
+            <label className="text-sm font-medium">Max Members</label>
+            <input
+              type="number"
+              min={2}
+              max={10}
+              value={maxMember}
+              onChange={(e) => setMaxMember(Number(e.target.value))}
+              className="w-full border px-3 py-2 rounded-md mt-1"
+            />
           </div>
-        </div>
 
-        <div className="bg-white border rounded-lg p-4 max-w-3xl">
-          {members.map((m) => (
-            <div
-              key={m.email}
-              className="flex justify-between items-center py-3 border-b last:border-none"
-            >
-              <span>{m.email}</span>
-              <div className="flex items-center space-x-3">
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(
-                    m.status
-                  )}`}
-                >
-                  {m.status}
-                </span>
-                {m.role && (
-                  <span className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded-full font-medium">
-                    {m.role}
-                  </span>
-                )}
-                <button
-                  onClick={() => handleDelete(m.email)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+          {/* Invite Members by Email */}
+          <div>
+            <label className="text-sm font-medium">Invite Members by Email</label>
+
+            <div className="flex gap-2 mt-2">
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="flex-1 border px-3 py-2 rounded-md"
+                placeholder="Enter member email..."
+              />
+              <button
+                onClick={handleAddEmail}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+              >
+                +
+              </button>
             </div>
-          ))}
+
+            {/* Display Invited Emails */}
+            <div className="mt-2 space-y-1">
+              {invitedEmails.map((email) => (
+                <div
+                  key={email}
+                  className="flex justify-between items-center text-sm bg-gray-200 px-3 py-1 rounded-md"
+                >
+                  {email}
+                  <button
+                    onClick={() => handleRemoveEmail(email)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Confirm Button */}
+          <button
+            onClick={handleCreateTeam}
+            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          >
+            ✅ Create Team
+          </button>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default CreateTeam;
